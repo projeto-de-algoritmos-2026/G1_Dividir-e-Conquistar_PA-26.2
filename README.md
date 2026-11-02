@@ -242,7 +242,11 @@ O plano de commits detalhado está em [docs/plano-de-commits-paa-dividir-e-conqu
 
 - Assinaturas das funções: [docs/assinaturas.md](docs/assinaturas.md)
 - Análise de cada algoritmo (estratégia, recorrência, complexidade) e resultados experimentais: seções "Análise dos algoritmos" e "Resultados experimentais" deste README
-- Vídeo de apresentação: _link a ser adicionado após a gravação_
+- Vídeo de apresentação: [https://youtu.be/MB-aw0wq7wc](https://youtu.be/MB-aw0wq7wc)
+
+### Nota sobre o histórico de commits
+
+Não foi possível manter o planejamento de commits graduais porque uma das integrantes precisou viajar para participar das eleições e, durante esse período, foi internada devido a complicações de saúde. Por precaução, ela permaneceu com a mãe, que poderia prestar apoio caso seu estado apresentasse alguma piora. 
 
 ## Checklist final
 
@@ -252,6 +256,5 @@ O plano de commits detalhado está em [docs/plano-de-commits-paa-dividir-e-conqu
 - [x] `python src/benchmark.py` gera CSV e gráfico
 - [x] README contém estratégia, recorrência, tempo e espaço dos três algoritmos
 - [x] README contém entrada, saída, conclusão e exemplo real
-- [ ] Repositório público e histórico das duas autoras conferidos
-- [ ] Vídeo publicado e link validado em aba anônima
-- [ ] Entrega submetida na plataforma da disciplina
+- [x] Repositório público e histórico das duas autoras conferidos
+- [x] Vídeo publicado e referenciado no README
