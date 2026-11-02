@@ -1,5 +1,7 @@
 # Sistema de Recomendação para Streaming de Música
 
+## Introdução
+
 Projeto da disciplina de Projeto e Análise de Algoritmos (UnB). Sistema simplificado para um serviço de streaming de música, que integra três algoritmos de dividir e conquistar (Contagem de Inversões, Par de Pontos Mais Próximo e Mediana das Medianas) para recomendar usuários e músicas parecidos e entender o comportamento típico de escuta.
 
 ## Dupla
@@ -9,7 +11,7 @@ Projeto da disciplina de Projeto e Análise de Algoritmos (UnB). Sistema simplif
 | Maria Clara Oleari de Araujo | 221008338 |
 | Ana Júlia Mendes Santos | 221007798 |
 
-## Descrição do problema
+## Problema
 
 Serviços de streaming guardam muita informação sobre músicas e ouvintes: o que cada usuário prefere, como cada faixa soa e quantas vezes ela foi tocada. O sistema usa esses dados para responder, rápido e com milhares de itens, três perguntas, cada uma resolvida por um algoritmo:
 
@@ -29,14 +31,14 @@ Músicas  → MEDIANA DAS MEDIANAS → duração e plays típicos
 
 O resultado final apresenta **os usuários mais parecidos, as músicas mais parecidas e a duração e os plays típicos**.
 
-### Objetivo
+## Objetivo
 
 - Implementar e testar os três algoritmos de dividir e conquistar, cada um com uma única implementação.
 - Mostrar, para cada um, a estratégia, a recorrência e as complexidades de tempo e espaço.
 - Integrar os três num fluxo único sobre dados de streaming gerados com semente fixa.
 - Medir os tempos para n = 10, 100, 1.000 e 10.000 e comparar o crescimento medido com a teoria.
 
-### Entrada
+## Entrada
 
 Os dados são gerados por [src/dados.py](src/dados.py), com semente fixa (42), então qualquer execução produz os mesmos dados. Os tamanhos são n = 10, 100, 1.000 e 10.000.
 
@@ -55,7 +57,7 @@ Cada algoritmo recebe:
 
 `python src/dados.py` grava os dados em `data/musicas_n{n}.csv` e `data/usuarios_n{n}.csv`. As assinaturas das funções estão em [docs/assinaturas.md](docs/assinaturas.md).
 
-### Algoritmos usados e por quê
+## Algoritmos usados e por quê
 
 | Etapa | Algoritmo | Estratégia | Por que é adequado |
 |---|---|---|---|
@@ -63,7 +65,7 @@ Cada algoritmo recebe:
 | Músicas mais parecidas | Par de pontos mais próximo | Dividir e conquistar (divisão por x + faixa de 2δ) | Cada música é um ponto (energia, dançabilidade); só é preciso comparar pontos próximos da linha de divisão, em O(n log n) em vez de O(n²) |
 | Valores típicos | Mediana das medianas | Dividir e conquistar (select com grupos de 5) | Acha a mediana em O(n) sem ordenar, e a mediana é robusta a outliers (a média não é) |
 
-### Complexidade
+### Complexidades resumidas
 
 | Algoritmo | Recorrência | Tempo | Espaço |
 |---|---|---|---|
@@ -73,7 +75,7 @@ Cada algoritmo recebe:
 
 Onde `n` é o número de elementos (rankings, músicas ou valores).
 
-### Saída
+## Saída
 
 O fluxo completo mostra no terminal os dois usuários mais parecidos e a similaridade entre eles (0 = rankings idênticos, 1 = invertidos), o par de músicas mais parecidas e a distância entre elas, e a mediana e alguns percentis de duração e de plays.
 
@@ -94,7 +96,12 @@ O fluxo completo mostra no terminal os dois usuários mais parecidos e a similar
 
 ### Par de pontos mais próximo (músicas parecidas)
 
-_Seção a ser preenchida junto com a implementação de `src/par_proximo.py`: estratégia, por que 7 vizinhos bastam, recorrência e espaço._
+- **Problema:** encontrar as duas músicas mais próximas no plano `(energia, dançabilidade)`, usando distância euclidiana.
+- **Estratégia:** os pontos são ordenados por x uma vez. Cada chamada divide a lista ao meio, resolve as metades e devolve também seus pontos ordenados por y. O merge por y custa O(n). Depois, a combinação examina a faixa de largura `2δ` ao redor da divisão, onde `δ` é a menor distância encontrada nas metades.
+- **Por que 7 vizinhos bastam:** divida a faixa em caixas de lado `δ/2`. Se existissem dois pontos da mesma metade na mesma caixa, a distância entre eles seria menor que `δ`. Logo cada caixa contém no máximo um ponto de cada metade. Na ordenação por y, qualquer candidato a distância menor que `δ` aparece entre os próximos 7 pontos; os demais já têm separação vertical de pelo menos `δ`.
+- **Recorrência:** T(n) = 2T(n/2) + O(n), pois cada nível faz dois subproblemas de metade do tamanho, um merge por y e uma varredura linear da faixa. Pelo Teorema Mestre, T(n) = **O(n log n)**.
+- **Espaço:** O(n) nas listas auxiliares e O(log n) na pilha recursiva.
+- **Testes:** dois e três pontos, linha reta, duplicatas com distância zero, par cruzando a divisão, músicas e entrada com menos de dois pontos.
 
 ### Mediana das medianas (duração e plays típicos)
 
@@ -126,15 +133,42 @@ _Seção a ser preenchida junto com a implementação de `src/par_proximo.py`: e
 
 ## Resultados experimentais
 
-_Seção a ser preenchida com o benchmark: tabela de tempos para n = 10, 100, 1.000 e 10.000 (salva em [data/resultados_benchmark.csv](data/resultados_benchmark.csv)), gráfico log-log do tempo contra n com as retas de referência n log n (inversões e par) e n (mediana), e uma análise de se a inclinação medida bate com a teoria._
+Cada valor é a mediana de cinco execuções. A criação das entradas fica fora da medição. Os dados brutos estão em [data/resultados_benchmark.csv](data/resultados_benchmark.csv).
+
+| n | Inversões (s) | Par próximo (s) | Mediana (s) |
+|---:|---:|---:|---:|
+| 10 | 0,000007 | 0,000019 | 0,000005 |
+| 100 | 0,000103 | 0,000257 | 0,000042 |
+| 1.000 | 0,001462 | 0,003731 | 0,000683 |
+| 10.000 | 0,019449 | 0,047901 | 0,007492 |
+
+![Gráfico log-log do benchmark](data/resultados_benchmark.png)
+
+Entre 1.000 e 10.000 elementos, os tempos cresceram aproximadamente 13,3 vezes para inversões, 12,9 vezes para par próximo e 11,0 vezes para mediana. Ao multiplicar n por 10, as referências crescem 13,3 vezes para O(n log n) e 10 vezes para O(n). Os dados seguem a tendência teórica; diferenças pequenas vêm do custo fixo, do sistema operacional e da resolução do relógio. Tempos absolutos variam entre máquinas.
 
 ## Conclusão
 
-_Seção a ser preenchida ao final do projeto._
+Os três algoritmos resolvem etapas diferentes do mesmo fluxo sem recorrer a versões ingênuas. A contagem de inversões compara rankings e o par mais próximo compara características musicais em O(n log n). A mediana das medianas encontra valores típicos em O(n) no pior caso e resiste a músicas virais que distorceriam a média. Os testes cobrem casos-limite e os resultados experimentais acompanham as complexidades previstas.
 
 ## Exemplo de execução
 
-_Seção a ser preenchida com a saída de `python src/main.py`._
+Executando `python src/main.py` com a semente padrão:
+
+```text
+=== Sistema de Recomendação para Streaming de Música ===
+
+1. Carregamento de dados (semente fixa): 1000 músicas e 5 usuários
+
+2. Usuários mais parecidos — contagem de inversões
+   Usuários 2 e 4: distância normalizada = 0.4739
+
+3. Músicas mais parecidas — par de pontos mais próximo
+   Musica 368 e Musica 402: distância = 0.000872
+
+4. Valores típicos — mediana das medianas
+   Duração: mediana = 345.5 s; P25 = 200.0 s; P75 = 474.0 s
+   Plays: mediana = 3318.0; P25 = 881.2; P75 = 12400.5
+```
 
 ## Estrutura do repositório
 
@@ -149,7 +183,8 @@ G1_Dividir-e-Conquistar_PA-26.2/
 │   └── benchmark.py     # experimentos de tempo (n = 10, 100, 1.000, 10.000)
 ├── data/
 │   ├── musicas_n{n}.csv, usuarios_n{n}.csv  # dados gerados por src/dados.py (não versionados)
-│   └── resultados_benchmark.csv             # saída do benchmark
+│   ├── resultados_benchmark.csv             # dados brutos do benchmark
+│   └── resultados_benchmark.png             # gráfico log-log
 ├── tests/
 │   ├── test_dados.py
 │   ├── test_inversoes.py
@@ -187,7 +222,7 @@ Fluxo completo: acha os usuários mais parecidos, as músicas mais parecidas e a
 python src/main.py
 ```
 
-Benchmark: mede o tempo de cada algoritmo para n = 10, 100, 1.000 e 10.000 e salva a tabela em `data/resultados_benchmark.csv`:
+Benchmark: mede o tempo de cada algoritmo para n = 10, 100, 1.000 e 10.000, salva a tabela em `data/resultados_benchmark.csv` e o gráfico em `data/resultados_benchmark.png`:
 
 ```bash
 python src/benchmark.py
@@ -208,3 +243,15 @@ O plano de commits detalhado está em [docs/plano-de-commits-paa-dividir-e-conqu
 - Assinaturas das funções: [docs/assinaturas.md](docs/assinaturas.md)
 - Análise de cada algoritmo (estratégia, recorrência, complexidade) e resultados experimentais: seções "Análise dos algoritmos" e "Resultados experimentais" deste README
 - Vídeo de apresentação: _link a ser adicionado após a gravação_
+
+## Checklist final
+
+- [x] Dependências declaradas em `requirements.txt`
+- [x] Suíte completa aprovada com `python -m pytest -q`
+- [x] `python src/main.py` roda do zero
+- [x] `python src/benchmark.py` gera CSV e gráfico
+- [x] README contém estratégia, recorrência, tempo e espaço dos três algoritmos
+- [x] README contém entrada, saída, conclusão e exemplo real
+- [ ] Repositório público e histórico das duas autoras conferidos
+- [ ] Vídeo publicado e link validado em aba anônima
+- [ ] Entrega submetida na plataforma da disciplina
