@@ -33,4 +33,6 @@ Tamanhos usados: `TAMANHOS = (10, 100, 1000, 10000)`.
 |---|---|---|
 | `selecionar(valores, k)` | lista de números e `k` (0-indexado) | o k-ésimo menor valor |
 | `mediana(valores)` | lista de números | a mediana |
-| `percentil(valores, p)` | lista de números e `p` em [0, 100] | valor no percentil `p` |
+| `percentil(valores, p)` | lista de números e `p` em [0, 100] | valor no percentil `p`, com interpolação linear (igual a `numpy.percentile`) |
+
+`selecionar` levanta `IndexError` se `k` estiver fora de `[0, n)`; `mediana` e `percentil` levantam `ValueError` para lista vazia (e `percentil` também para `p` fora de [0, 100]).
