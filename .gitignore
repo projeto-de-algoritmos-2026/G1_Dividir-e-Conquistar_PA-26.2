@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+
+# Dados gerados por src/dados.py (reproduzíveis pela semente fixa)
+data/musicas_n*.csv
+data/usuarios_n*.csv
