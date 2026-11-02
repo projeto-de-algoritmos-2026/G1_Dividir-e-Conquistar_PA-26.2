@@ -1,63 +1,42 @@
-# G1_Dividir-e-Conquistar_PA-26.2
+# Sistema de Recomendação para Streaming de Música
 
-Trabalho 3 de Projeto e Análise de Algoritmos: um sistema de streaming de música que usa três algoritmos de dividir e conquistar para recomendar usuários e músicas parecidos e entender o comportamento típico de escuta.
+Projeto da disciplina de Projeto e Análise de Algoritmos (UnB). Sistema simplificado para um serviço de streaming de música, que integra três algoritmos de dividir e conquistar (Contagem de Inversões, Par de Pontos Mais Próximo e Mediana das Medianas) para recomendar usuários e músicas parecidos e entender o comportamento típico de escuta.
 
-| Algoritmo | Aplicação | Complexidade |
-|---|---|---|
-| Contagem de inversões | Similaridade entre usuários (Kendall tau) | O(n log n) |
-| Par de pontos mais próximo | Músicas mais parecidas (energia × dançabilidade) | O(n log n) |
-| Mediana das medianas | Duração e plays típicos, robusto a outliers | O(n) |
+## Dupla
 
-## Estrutura
+| Nome | Matrícula |
+|---|---|
+| Maria Clara Oleari de Araujo | 221008338 |
+| Ana Júlia Mendes Santos | 221007798 |
+
+## Descrição do problema
+
+Serviços de streaming guardam muita informação sobre músicas e ouvintes: o que cada usuário prefere, como cada faixa soa e quantas vezes ela foi tocada. O sistema usa esses dados para responder, rápido e com milhares de itens, três perguntas, cada uma resolvida por um algoritmo:
 
 ```
-├── src/
-│   ├── inversoes.py
-│   ├── par_proximo.py
-│   ├── mediana.py
-│   ├── dados.py
-│   ├── main.py
-│   └── benchmark.py
-├── data/
-├── tests/
-├── docs/
-└── README.md
+1. Quais usuários têm gosto parecido?        → INVERSÕES
+2. Quais músicas são mais parecidas?         → PAR DE PONTOS MAIS PRÓXIMO
+3. Qual é a duração e o play típico?         → MEDIANA DAS MEDIANAS
 ```
 
-As assinaturas das funções estão em [docs/assinaturas.md](docs/assinaturas.md).
+Fluxo do sistema:
 
-## Como executar
-
-```bash
-pip install -r requirements.txt
-pytest
-python src/dados.py   # gera os CSVs de n = 10, 100, 1000 e 10000 em data/
+```
+Usuários → INVERSÕES → usuários mais parecidos
+Músicas  → PAR MAIS PRÓXIMO → músicas mais parecidas
+Músicas  → MEDIANA DAS MEDIANAS → duração e plays típicos
 ```
 
----
+O resultado final apresenta **os usuários mais parecidos, as músicas mais parecidas e a duração e os plays típicos**.
 
-## 1. Introdução
+### Objetivo
 
-Serviços de streaming guardam muita informação sobre músicas e ouvintes: o que cada usuário prefere, como cada faixa soa e quantas vezes ela foi tocada. Para transformar isso em recomendação é preciso responder, rápido e com milhares de itens, perguntas como "quais usuários têm gosto parecido?", "quais músicas são quase iguais?" e "qual é a duração típica de uma faixa?".
-
-Este trabalho resolve essas três perguntas com algoritmos de dividir e conquistar, que dividem o problema em partes menores, resolvem cada parte e combinam os resultados. Cada pergunta usa um algoritmo clássico, e cada um tem uma única implementação, a de dividir e conquistar.
-
-## 2. Problema
-
-O serviço de streaming quer:
-
-1. **Recomendar usuários parecidos.** Dados os rankings de músicas de dois usuários, medir o quanto eles discordam. Isso é contar os pares de músicas que aparecem em ordem oposta nos dois rankings.
-2. **Recomendar músicas parecidas.** Cada música é descrita por duas características (energia e dançabilidade), então vira um ponto no plano. Achar as duas músicas mais próximas entre milhares de pontos, sem comparar todos os pares.
-3. **Entender o comportamento típico de escuta.** Achar a duração e o número de plays típicos, sem que algumas músicas com valores absurdos distorçam o resultado.
-
-## 3. Objetivo
-
-- Implementar e testar os três algoritmos de dividir e conquistar: contagem de inversões, par de pontos mais próximo e mediana das medianas.
+- Implementar e testar os três algoritmos de dividir e conquistar, cada um com uma única implementação.
 - Mostrar, para cada um, a estratégia, a recorrência e as complexidades de tempo e espaço.
 - Integrar os três num fluxo único sobre dados de streaming gerados com semente fixa.
 - Medir os tempos para n = 10, 100, 1.000 e 10.000 e comparar o crescimento medido com a teoria.
 
-## 4. Entrada
+### Entrada
 
 Os dados são gerados por [src/dados.py](src/dados.py), com semente fixa (42), então qualquer execução produz os mesmos dados. Os tamanhos são n = 10, 100, 1.000 e 10.000.
 
@@ -74,88 +53,158 @@ Cada algoritmo recebe:
 | Par mais próximo | Lista de músicas, usando `(energia, dancabilidade)` como ponto |
 | Mediana das medianas | Lista de durações ou de plays, mais `k` ou `p` |
 
-`python src/dados.py` grava os dados em `data/musicas_n{n}.csv` e `data/usuarios_n{n}.csv`.
+`python src/dados.py` grava os dados em `data/musicas_n{n}.csv` e `data/usuarios_n{n}.csv`. As assinaturas das funções estão em [docs/assinaturas.md](docs/assinaturas.md).
 
-## 5. Saída
+### Algoritmos usados e por quê
 
-O fluxo completo (`python src/main.py`) mostra no terminal:
+| Etapa | Algoritmo | Estratégia | Por que é adequado |
+|---|---|---|---|
+| Similaridade entre usuários | Contagem de inversões | Dividir e conquistar (Sort-and-Count) | Comparar dois rankings é contar os pares em ordem oposta; o merge ordena e conta ao mesmo tempo, em O(n log n) em vez de O(n²) |
+| Músicas mais parecidas | Par de pontos mais próximo | Dividir e conquistar (divisão por x + faixa de 2δ) | Cada música é um ponto (energia, dançabilidade); só é preciso comparar pontos próximos da linha de divisão, em O(n log n) em vez de O(n²) |
+| Valores típicos | Mediana das medianas | Dividir e conquistar (select com grupos de 5) | Acha a mediana em O(n) sem ordenar, e a mediana é robusta a outliers (a média não é) |
 
-- os dois usuários mais parecidos e a similaridade entre eles (0 = rankings idênticos, 1 = invertidos);
-- o par de músicas mais parecidas e a distância entre elas;
-- a mediana e alguns percentis de duração e de plays.
+### Complexidade
 
-As funções devolvem:
+| Algoritmo | Recorrência | Tempo | Espaço |
+|---|---|---|---|
+| Inversões | T(n) = 2T(n/2) + O(n) | `O(n log n)` | `O(n)` |
+| Par mais próximo | T(n) = 2T(n/2) + O(n) | `O(n log n)` | `O(n)` |
+| Mediana das medianas | T(n) = T(n/5) + T(7n/10) + O(n) | `O(n)` | `O(n)` |
 
-| Função | Saída |
-|---|---|
-| `contar_inversoes(lista)` | `int`, número de inversões |
-| `similaridade(a, b)` | `float` em [0, 1] |
-| `par_mais_proximo(pontos)` | `(p1, p2, distancia)` |
-| `selecionar(valores, k)` | o k-ésimo menor valor |
-| `mediana(valores)` / `percentil(valores, p)` | `float` ou `int` com o valor típico |
+Onde `n` é o número de elementos (rankings, músicas ou valores).
 
-## 6. Inversões
+### Saída
 
-**Problema.** Dados dois rankings de músicas feitos por usuários diferentes, medir o quanto eles discordam. Contar os pares de músicas que aparecem em ordem oposta nos dois rankings (distância de Kendall tau). Reescrevendo o ranking A com a posição de cada música no ranking B, isso vira contar as inversões de uma sequência: pares `i < j` com `a[i] > a[j]`.
+O fluxo completo mostra no terminal os dois usuários mais parecidos e a similaridade entre eles (0 = rankings idênticos, 1 = invertidos), o par de músicas mais parecidas e a distância entre elas, e a mediana e alguns percentis de duração e de plays.
 
-**Estratégia (Sort-and-Count).**
+## Análise dos algoritmos
 
-- **Dividir:** separar a lista em duas metades.
-- **Conquistar:** contar recursivamente as inversões de cada metade, que volta ordenada.
-- **Combinar:** fazer o merge das duas metades ordenadas. Cada vez que um elemento da direita é escolhido antes de elementos que ainda restam na esquerda, ele forma inversão com todos eles. Basta somar `len(esquerda) - i`.
+### Inversões (similaridade entre usuários)
 
-O merge ordena e conta ao mesmo tempo, então cada nível da recursão custa O(n). A versão que reordena a lista a cada nível custaria O(n log² n), e por isso não foi usada.
+- **Problema:** dados dois rankings de músicas feitos por usuários diferentes, medir o quanto eles discordam. Contar os pares de músicas que aparecem em ordem oposta nos dois rankings (distância de Kendall tau). Reescrevendo o ranking A com a posição de cada música no ranking B, isso vira contar as inversões de uma sequência: pares `i < j` com `a[i] > a[j]`.
+- **Estratégia (Sort-and-Count):**
+  - **Dividir:** separar a lista em duas metades.
+  - **Conquistar:** contar recursivamente as inversões de cada metade, que volta ordenada.
+  - **Combinar:** fazer o merge das duas metades ordenadas. Cada vez que um elemento da direita é escolhido antes de elementos que ainda restam na esquerda, ele forma inversão com todos eles. Basta somar `len(esquerda) - i`.
+- **Por que O(n log n):** o merge ordena e conta ao mesmo tempo, então cada nível da recursão custa O(n). A versão que reordena a lista a cada nível custaria O(n log² n), e por isso não foi usada.
+- **Recorrência:** T(n) = 2T(n/2) + O(n), que resolve para **O(n log n)** no tempo (Teorema Mestre, caso 2).
+- **Espaço:** O(n), pelas listas auxiliares do merge, mais a pilha de recursão de profundidade O(log n).
+- **Similaridade:** `similaridade(a, b)` divide o número de inversões por n(n-1)/2, o máximo possível. Dá 0 para rankings idênticos e 1 para rankings invertidos.
+- **Testes:** lista ordenada (0 inversões), lista invertida (n(n-1)/2), exemplo do slide `1 5 4 8 10 2 6 9 12 11 3 7` (22), lista vazia e com um elemento (0), valores repetidos e propriedades da similaridade.
 
-**Recorrência.**
+### Par de pontos mais próximo (músicas parecidas)
 
-T(n) = 2T(n/2) + O(n), que resolve para **O(n log n)** no tempo (Teorema Mestre, caso 2).
+_Seção a ser preenchida junto com a implementação de `src/par_proximo.py`: estratégia, por que 7 vizinhos bastam, recorrência e espaço._
 
-**Espaço.** O(n): as listas auxiliares do merge, mais a pilha de recursão de profundidade O(log n).
+### Mediana das medianas (duração e plays típicos)
 
-**Similaridade.** `similaridade(a, b)` divide o número de inversões por n(n-1)/2, o máximo possível. Dá 0 para rankings idênticos e 1 para rankings invertidos.
+- **Problema:** achar a duração e o número de plays típicos das músicas. A média não serve: uma única música viral com milhões de plays puxa a média para cima. A mediana (o valor do meio) é robusta a esses outliers. Ordenar tudo para achá-la custa O(n log n), mas o algoritmo de seleção acha o k-ésimo menor valor em **O(n)**.
+- **Estratégia (select com grupos de 5):** para achar o k-ésimo menor valor de uma lista:
+  1. **Dividir** a lista em grupos de 5 elementos.
+  2. Tirar a **mediana de cada grupo** (custo constante por grupo, O(n) no total).
+  3. Achar, recursivamente, a **mediana dessas medianas**. Ela é o pivô.
+  4. **Particionar** a lista em L (menores que o pivô), os iguais ao pivô e R (maiores).
+  5. **Descer só no lado certo**: se k cai em L, repetir em L; se cai nos iguais, o pivô é a resposta; senão, repetir em R com k ajustado.
 
-**Testes.** Lista ordenada (0 inversões), lista invertida (n(n-1)/2), exemplo do slide `1 5 4 8 10 2 6 9 12 11 3 7` (22), lista vazia e com um elemento (0), valores repetidos e propriedades da similaridade.
+  Os valores iguais ao pivô são tratados à parte, para a recursão sempre progredir mesmo com muitas repetições.
+- **Por que o pivô é bom (entre 3n/10 e 7n/10):** há n/5 grupos, e o pivô é a mediana das medianas, então metade dos grupos (n/10 grupos) tem a mediana menor ou igual ao pivô. Em cada um desses grupos, 3 dos 5 elementos (a mediana e os 2 menores que ela) são menores ou iguais ao pivô. Logo pelo menos 3 · n/10 = 3n/10 elementos são ≤ pivô. Pelo mesmo argumento no sentido contrário, pelo menos 3n/10 são ≥ pivô. Isso significa que L e R têm no máximo 7n/10 elementos cada, então a recursão do passo 5 nunca fica com mais de 7n/10 da lista.
+- **Recorrência:** T(n) ≤ T(n/5) + T(7n/10) + O(n).
+  - T(n/5): achar a mediana das medianas (passo 3).
+  - T(7n/10): descer no lado maior da partição (passo 5).
+  - O(n): montar os grupos, as medianas e a partição.
 
-## 7. Par mais próximo
+  Como n/5 + 7n/10 = 9n/10 < n, a soma dos tamanhos dos subproblemas é uma fração fixa de n. Os custos por nível formam uma série geométrica de razão 9/10, que soma no máximo 10 · cn, então T(n) = **O(n)**.
+- **Por que grupos de 3 não dão linear:** com grupos de 3 o argumento de contagem dá apenas n/3 grupos, e cada grupo "bom" contribui com 2 de 3 elementos: pelo menos 2 · n/6 = n/3 elementos de cada lado, ou seja, a partição pode ficar em até 2n/3. A recorrência vira T(n) ≤ T(n/3) + T(2n/3) + O(n). Aqui n/3 + 2n/3 = n: os subproblemas somam o tamanho original e cada nível da recursão ainda custa O(n), com O(log n) níveis. O resultado é O(n log n), igual a ordenar. Com grupos de 5, a soma 9n/10 < n é o que faz a série convergir e dá o tempo linear.
+- **Espaço:** O(n), pelas listas L, R e as medianas dos grupos, mais a pilha de recursão de profundidade O(log n).
+- **Funções:**
+  - `selecionar(valores, k)`: k-ésimo menor valor (k começa em 0).
+  - `mediana(valores)`: valor do meio, ou média dos dois do meio se n é par.
+  - `percentil(valores, p)`: percentil p (0 a 100) com interpolação linear, igual a `numpy.percentile`. Sendo assim, `percentil(v, 50) == mediana(v)`.
 
-_Seção a ser preenchida junto com a implementação de `src/par_proximo.py`._
+  Elas são aplicadas à duração e aos plays das músicas.
+- **Testes:** resultado igual a `sorted(x)[k]` em entradas aleatórias (a ordenação é usada só como conferência dentro do teste), tamanho par e ímpar, valores repetidos, lista com um elemento, entrada já ordenada, uma lista com outlier extremo (a mediana quase não muda e a média dispara), erros para `k` fora do intervalo e lista vazia, e percentis conferidos contra `numpy.percentile`.
 
-## 8. Mediana das medianas
+## Resultados experimentais
 
-**Problema.** Achar a duração e o número de plays típicos das músicas. A média não serve: uma única música viral com milhões de plays puxa a média para cima. A mediana (o valor do meio) é robusta a esses outliers. Ordenar tudo para achá-la custa O(n log n), mas o algoritmo de seleção acha o k-ésimo menor valor em **O(n)**.
+_Seção a ser preenchida com o benchmark: tabela de tempos para n = 10, 100, 1.000 e 10.000 (salva em [data/resultados_benchmark.csv](data/resultados_benchmark.csv)), gráfico log-log do tempo contra n com as retas de referência n log n (inversões e par) e n (mediana), e uma análise de se a inclinação medida bate com a teoria._
 
-**Estratégia (select com grupos de 5).** Para achar o k-ésimo menor valor de uma lista:
+## Conclusão
 
-1. **Dividir** a lista em grupos de 5 elementos.
-2. Tirar a **mediana de cada grupo** (custo constante por grupo, O(n) no total).
-3. Achar, recursivamente, a **mediana dessas medianas**. Ela é o pivô.
-4. **Particionar** a lista em L (menores que o pivô), os iguais ao pivô e R (maiores).
-5. **Descer só no lado certo**: se k cai em L, repetir em L; se cai nos iguais, o pivô é a resposta; senão, repetir em R com k ajustado.
+_Seção a ser preenchida ao final do projeto._
 
-Os valores iguais ao pivô são tratados à parte, para a recursão sempre progredir mesmo com muitas repetições.
+## Exemplo de execução
 
-**Por que o pivô é bom (entre 3n/10 e 7n/10).** Há n/5 grupos, e o pivô é a mediana das medianas, então metade dos grupos (n/10 grupos) tem a mediana menor ou igual ao pivô. Em cada um desses grupos, 3 dos 5 elementos (a mediana e os 2 menores que ela) são menores ou iguais ao pivô. Logo pelo menos 3 · n/10 = 3n/10 elementos são ≤ pivô. Pelo mesmo argumento no sentido contrário, pelo menos 3n/10 são ≥ pivô. Isso significa que L e R têm no máximo 7n/10 elementos cada, então a recursão do passo 5 nunca fica com mais de 7n/10 da lista.
+_Seção a ser preenchida com a saída de `python src/main.py`._
 
-**Recorrência.**
+## Estrutura do repositório
 
-T(n) ≤ T(n/5) + T(7n/10) + O(n)
+```
+G1_Dividir-e-Conquistar_PA-26.2/
+├── src/
+│   ├── main.py          # fluxo completo: usuários -> inversões, músicas -> par próximo e mediana
+│   ├── dados.py         # tipos (Musica, Usuario) e gerador de dados com semente fixa
+│   ├── inversoes.py     # Contagem de inversões (Sort-and-Count) + similaridade
+│   ├── par_proximo.py   # Par de pontos mais próximo
+│   ├── mediana.py       # Mediana das medianas (select) + mediana e percentil
+│   └── benchmark.py     # experimentos de tempo (n = 10, 100, 1.000, 10.000)
+├── data/
+│   ├── musicas_n{n}.csv, usuarios_n{n}.csv  # dados gerados por src/dados.py (não versionados)
+│   └── resultados_benchmark.csv             # saída do benchmark
+├── tests/
+│   ├── test_dados.py
+│   ├── test_inversoes.py
+│   ├── test_par_proximo.py
+│   └── test_mediana.py
+├── docs/
+│   ├── assinaturas.md
+│   └── plano-de-commits-paa-dividir-e-conquistar.md  # plano de commits
+├── pytest.ini
+├── requirements.txt
+├── LICENSE
+└── README.md
+```
 
-- T(n/5): achar a mediana das medianas (passo 3).
-- T(7n/10): descer no lado maior da partição (passo 5).
-- O(n): montar os grupos, as medianas e a partição.
+## Como instalar
 
-Como n/5 + 7n/10 = 9n/10 < n, a soma dos tamanhos dos subproblemas é uma fração fixa de n. Os custos por nível formam uma série geométrica de razão 9/10, que soma no máximo 10 · cn, então T(n) = **O(n)**.
+```bash
+cd G1_Dividir-e-Conquistar_PA-26.2
+python -m venv venv
+venv\Scripts\activate        # Linux/macOS: source venv/bin/activate
+pip install -r requirements.txt
+```
 
-**Por que grupos de 3 não dão linear.** Com grupos de 3 o argumento de contagem dá apenas n/3 grupos, e cada grupo "bom" contribui com 2 de 3 elementos: pelo menos 2 · n/6 = n/3 elementos de cada lado, ou seja, a partição pode ficar em até 2n/3. A recorrência vira T(n) ≤ T(n/3) + T(2n/3) + O(n). Aqui n/3 + 2n/3 = n: os subproblemas somam o tamanho original e cada nível da recursão ainda custa O(n), com O(log n) níveis. O resultado é O(n log n), igual a ordenar. Com grupos de 5, a soma 9n/10 < n é o que faz a série convergir e dá o tempo linear.
+## Como rodar
 
-**Espaço.** O(n): as listas L, R e as medianas dos grupos, mais a pilha de recursão de profundidade O(log n).
+Gerar os dados (n = 10, 100, 1.000 e 10.000, em `data/`):
 
-**Funções.**
+```bash
+python src/dados.py
+```
 
-- `selecionar(valores, k)`: k-ésimo menor valor (k começa em 0).
-- `mediana(valores)`: valor do meio, ou média dos dois do meio se n é par.
-- `percentil(valores, p)`: percentil p (0 a 100) com interpolação linear, igual a `numpy.percentile`. Sendo assim, `percentil(v, 50) == mediana(v)`.
+Fluxo completo: acha os usuários mais parecidos, as músicas mais parecidas e a duração e os plays típicos, e imprime o resultado no terminal:
 
-Elas são aplicadas à duração e aos plays das músicas.
+```bash
+python src/main.py
+```
 
-**Testes.** Resultado igual a `sorted(x)[k]` em entradas aleatórias (a ordenação é usada só como conferência dentro do teste), tamanho par e ímpar, valores repetidos, lista com um elemento, entrada já ordenada, uma lista com outlier extremo (a mediana quase não muda e a média dispara), erros para `k` fora do intervalo e lista vazia, e percentis conferidos contra `numpy.percentile`.
+Benchmark: mede o tempo de cada algoritmo para n = 10, 100, 1.000 e 10.000 e salva a tabela em `data/resultados_benchmark.csv`:
+
+```bash
+python src/benchmark.py
+```
+
+## Como rodar os testes
+
+```bash
+python -m pytest -q
+```
+
+## Cronograma
+
+O plano de commits detalhado está em [docs/plano-de-commits-paa-dividir-e-conquistar.md](docs/plano-de-commits-paa-dividir-e-conquistar.md).
+
+## Relatório e vídeo de apresentação
+
+- Assinaturas das funções: [docs/assinaturas.md](docs/assinaturas.md)
+- Análise de cada algoritmo (estratégia, recorrência, complexidade) e resultados experimentais: seções "Análise dos algoritmos" e "Resultados experimentais" deste README
+- Vídeo de apresentação: _link a ser adicionado após a gravação_
